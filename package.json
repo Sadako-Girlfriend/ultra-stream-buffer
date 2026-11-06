@@ -1,0 +1,54 @@
+{
+  "name": "ultra-stream-buffer",
+  "version": "0.1.0",
+  "description": "Zero-dependency high-frequency text stream buffer with requestAnimationFrame-aligned flushing.",
+  "keywords": [
+    "stream",
+    "buffer",
+    "raf",
+    "throttle",
+    "llm",
+    "sse",
+    "typescript",
+    "zero-dependency"
+  ],
+  "license": "MIT",
+  "author": "zhenzi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sadako-Girlfriend/ultra-stream-buffer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Sadako-Girlfriend/ultra-stream-buffer/issues"
+  },
+  "homepage": "https://github.com/Sadako-Girlfriend/ultra-stream-buffer#readme",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "node -e \"import('node:fs').then(fs => fs.promises.rm('dist',{recursive:true,force:true}))\"",
+    "test": "tsx --test test/**/*.test.ts",
+    "prepublishOnly": "npm run clean && npm run build && npm test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+*.log
+coverage/
+.idea/
+.vscode/
+local-demo/
+.npmrc
+*.tgz
