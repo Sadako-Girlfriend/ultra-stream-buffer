@@ -10,6 +10,16 @@
 >
 > **中文：** 专为超高频（**每秒 2000 字以上**）AI 流式输出设计的**零依赖** TypeScript 文本缓冲器。
 
+### Live Demo · 在线演示
+
+Clay-styled bilingual playground (EN / 中文):
+
+**https://sadako-girlfriend.github.io/ultra-stream-buffer/**
+
+> Enable GitHub Pages once: **Settings → Pages → Source: Deploy from a branch → `main` / `/docs`**.
+>
+> 首次需在仓库开启 Pages：**Settings → Pages → Source 选分支 `main`，文件夹 `/docs`**。
+
 ---
 
 ## Why UltraStreamBuffer? · 为什么需要它？
