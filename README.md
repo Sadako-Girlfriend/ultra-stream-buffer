@@ -123,11 +123,14 @@ const buffer = new UltraStreamBuffer({
   onFinish: () => {
     console.log('stream complete');
   },
+  onError: (err) => {
+    console.error(err); // optional · 可选：避免 onUpdate 抛错被静默吞掉
+  },
 
   // Optional knobs · 可选调参
   throttleTime: 16,      // Node / no-RAF fallback interval (ms)
-  maxBufferChars: 2000,  // skip-frame volume threshold
-  maxSpanMs: 100,        // skip-frame latency threshold
+  maxBufferChars: 2000,  // degrade when pending chars ≥ threshold
+  maxSpanMs: 100,        // degrade when pending span ≥ threshold (checked on push only)
 });
 
 // Feed tokens as fast as they arrive — push() is O(1) amortized.
@@ -150,12 +153,13 @@ abortButton.addEventListener('click', () => {
 
 ```ts
 interface UltraStreamBufferOptions {
-  onUpdate: (text: string) => void;
+  onUpdate: (text: string) => void;   // required · 必填（运行时也会校验）
   onFinish?: () => void;
-  throttleTime?: number;     // default 16
-  maxBufferChars?: number;   // default 2000
-  maxBufferLength?: number;  // alias of maxBufferChars
-  maxSpanMs?: number;        // default 100
+  onError?: (error: unknown) => void; // optional error sink · 可选错误出口
+  throttleTime?: number;              // default 16, ≥ 0
+  maxBufferChars?: number;            // default 2000, ≥ 1
+  maxBufferLength?: number;           // alias of maxBufferChars
+  maxSpanMs?: number;                 // default 100, ≥ 1; checked on push() only
 }
 
 class UltraStreamBuffer {
@@ -163,10 +167,16 @@ class UltraStreamBuffer {
   finish(): void;
   abort(): void;
   readonly isAborted: boolean;
-  readonly isFinished: boolean;
+  readonly isFinished: boolean;   // true only after finish()
+  readonly isDone: boolean;       // finished || aborted
   readonly pendingChars: number;
+  readonly hasPendingFrame: boolean;
 }
 ```
+
+> **maxSpanMs note · 说明：** the span check runs **only inside `push()`**. If the upstream stops pushing (e.g. tab hidden → RAF paused + model “thinking”), the library will not spontaneously flush until the next `push`, `finish()`, or degrade path.
+>
+> **跨度检查只在 `push()` 内执行。** 上游停推时（例如后台标签页 RAF 暂停且模型思考中），在下一次 `push` / `finish` / 降级路径之前不会主动冲刷。
 
 ---
 
@@ -177,15 +187,16 @@ class UltraStreamBuffer {
                          │
                          ├─ chars ≥ maxBufferChars ─┐
                          └─ span  ≥ maxSpanMs      ─┴─► cancel frame → sync flush
+                            (span checked on push only)
 ```
 
 1. **`push`** appends into an internal array and schedules **at most one** frame ticket.
-2. **`flush`** joins once, clears the array **before** invoking `onUpdate` (so fragmented chunks are not retained), then delivers the merged string.
+2. **`flush`** joins once, clears the array **before** invoking `onUpdate` (so fragmented chunks are not retained), then delivers the merged string. Re-entrant `push` during `onUpdate` is deferred and drained afterward.
 3. **`abort`** cancels the ticket, drops pending text, and permanently silences callbacks.
 4. **`finish`** force-flushes remainder, then fires `onFinish` once.
 
 1. **`push`** 写入内分数组，且任意时刻最多只挂 **一张** 帧票据。  
-2. **`flush`** 只 `join` 一次，**先清空数组再调用** `onUpdate`，避免碎片引用残留。  
+2. **`flush`** 只 `join` 一次，**先清空数组再调用** `onUpdate`；`onUpdate` 内重入的 `push` 会延后排空，避免同步递归。  
 3. **`abort`** 取消调度、丢弃缓冲，并永久静默回调。  
 4. **`finish`** 冲刷残余后，**只触发一次** `onFinish`。
 

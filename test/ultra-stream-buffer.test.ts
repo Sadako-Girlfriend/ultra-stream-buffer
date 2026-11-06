@@ -243,4 +243,101 @@ describe('UltraStreamBuffer', () => {
     buf.abort();
     assert.equal(buf.isAborted, true);
   });
+
+  it('throws if onUpdate is missing', () => {
+    assert.throws(
+      () =>
+        new UltraStreamBuffer({
+          // @ts-expect-error intentional invalid options for runtime guard
+          onUpdate: undefined,
+        }),
+      /onUpdate must be a function/
+    );
+  });
+
+  it('reports onUpdate errors via onError without poisoning state', async () => {
+    const errors: unknown[] = [];
+    let calls = 0;
+    const buf = new UltraStreamBuffer({
+      throttleTime: 10,
+      maxBufferChars: 10_000,
+      maxSpanMs: 10_000,
+      onUpdate: () => {
+        calls += 1;
+        throw new Error('boom');
+      },
+      onError: (err) => {
+        errors.push(err);
+      },
+    });
+
+    buf.push('x');
+    await delay(30);
+
+    assert.equal(calls, 1);
+    assert.equal(errors.length, 1);
+    assert.ok(errors[0] instanceof Error);
+
+    buf.push('y');
+    await delay(30);
+    assert.equal(calls, 2);
+    assert.equal(errors.length, 2);
+    assert.equal(buf.isAborted, false);
+  });
+
+  it('isDone is true after finish or abort; isFinished stays false on abort-only', () => {
+    const a = new UltraStreamBuffer({ onUpdate: () => undefined });
+    a.abort();
+    assert.equal(a.isAborted, true);
+    assert.equal(a.isFinished, false);
+    assert.equal(a.isDone, true);
+
+    const b = new UltraStreamBuffer({ onUpdate: () => undefined });
+    b.finish();
+    assert.equal(b.isFinished, true);
+    assert.equal(b.isDone, true);
+  });
+
+  it('defers re-entrant push during onUpdate instead of nested flush', () => {
+    const updates: string[] = [];
+    let reentered = false;
+
+    const buf = new UltraStreamBuffer({
+      throttleTime: 1000,
+      maxBufferChars: 5,
+      maxSpanMs: 10_000,
+      onUpdate: (text) => {
+        updates.push(text);
+        if (!reentered) {
+          reentered = true;
+          // Would previously recurse synchronously via degrade → flush.
+          // 以前会经降级路径同步递归 flush。
+          buf.push('ZZZZZZ');
+        }
+      },
+    });
+
+    buf.push('AAAAAA'); // >= 5 → sync flush
+    assert.equal(updates[0], 'AAAAAA');
+    // Re-entrant chunk should be delivered (drain), not dropped.
+    // 重入分片应被排空交付，不能丢。
+    assert.equal(updates.length, 2);
+    assert.equal(updates[1], 'ZZZZZZ');
+    assert.equal(buf.pendingChars, 0);
+  });
+
+  it('hasPendingFrame reflects outstanding timeout ticket', async () => {
+    const buf = new UltraStreamBuffer({
+      throttleTime: 40,
+      maxBufferChars: 10_000,
+      maxSpanMs: 10_000,
+      onUpdate: () => undefined,
+    });
+
+    assert.equal(buf.hasPendingFrame, false);
+    buf.push('a');
+    assert.equal(buf.hasPendingFrame, true);
+    await delay(60);
+    assert.equal(buf.hasPendingFrame, false);
+  });
 });
