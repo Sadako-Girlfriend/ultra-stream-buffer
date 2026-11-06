@@ -108,11 +108,18 @@ type SchedulerKind = 'raf' | 'timeout';
 /* -------------------------------------------------------------------------- */
 
 /**
- * EN: Detect whether the global requestAnimationFrame API is available.
- * 中文：检测全局是否存在 requestAnimationFrame。
+ * EN: Use the animation-frame path only when BOTH request and cancel exist.
+ *     RAF-without-cAF harnesses/polyfills must fall back to setTimeout so
+ *     cancelFrame() never throws TypeError on abort.
+ * 中文：仅当 request / cancel 成对存在时才走动画帧路径。
+ *      只有 RAF、没有 cAF 的 polyfill/测试环境必须回退 setTimeout，
+ *      避免 abort 时 cancelFrame() 抛 TypeError 炸穿调用栈。
  */
-function hasRequestAnimationFrame(): boolean {
-  return typeof requestAnimationFrame === 'function';
+function canUseAnimationFrame(): boolean {
+  return (
+    typeof requestAnimationFrame === 'function' &&
+    typeof cancelAnimationFrame === 'function'
+  );
 }
 
 /**
@@ -400,7 +407,7 @@ export class UltraStreamBuffer {
       return;
     }
 
-    if (hasRequestAnimationFrame()) {
+    if (canUseAnimationFrame()) {
       this.schedulerKind = 'raf';
       this.frameId = requestAnimationFrame(() => {
         this.frameId = null;
@@ -419,7 +426,9 @@ export class UltraStreamBuffer {
 
   /**
    * EN: Cancel using the kind recorded at schedule time — never re-detect env.
+   *     Soft-guard cAF so a mismatched harness cannot throw out of abort().
    * 中文：按调度时记录的种类取消——绝不在取消时重新探测环境。
+   *      对 cAF 再做一层软保护，避免异常 harness 让 abort() 抛错。
    */
   private cancelFrame(): void {
     if (this.frameId === null) {
@@ -428,7 +437,9 @@ export class UltraStreamBuffer {
     }
 
     if (this.schedulerKind === 'raf') {
-      cancelAnimationFrame(this.frameId as number);
+      if (typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(this.frameId as number);
+      }
     } else if (this.schedulerKind === 'timeout') {
       clearTimeout(this.frameId as ReturnType<typeof setTimeout>);
     }

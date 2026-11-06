@@ -341,6 +341,39 @@ describe('UltraStreamBuffer', () => {
     assert.equal(buf.hasPendingFrame, false);
   });
 
+  it('falls back to setTimeout when RAF exists without cancelAnimationFrame', async () => {
+    // Harness: raf present, caf absent — must not schedule an uncancellable ticket.
+    // 测试环境：有 RAF 无 cAF —— 不得挂上无法取消的票据。
+    globalThis.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+      return setTimeout(() => cb(performance.now()), 0) as unknown as number;
+    }) as typeof requestAnimationFrame;
+    // @ts-expect-error intentional missing cancel for this case
+    delete globalThis.cancelAnimationFrame;
+
+    let updates = 0;
+    const buf = new UltraStreamBuffer({
+      throttleTime: 10,
+      maxBufferChars: 10_000,
+      maxSpanMs: 10_000,
+      onUpdate: () => {
+        updates += 1;
+      },
+    });
+
+    buf.push('x');
+    assert.equal(buf.hasPendingFrame, true);
+
+    // abort must not throw even in this broken RAF environment
+    assert.doesNotThrow(() => {
+      buf.abort();
+    });
+    assert.equal(buf.isAborted, true);
+    assert.equal(buf.hasPendingFrame, false);
+
+    await delay(30);
+    assert.equal(updates, 0);
+  });
+
   it('flushNow() sync-flushes without ending the stream', async () => {
     const updates: string[] = [];
     let finished = false;
