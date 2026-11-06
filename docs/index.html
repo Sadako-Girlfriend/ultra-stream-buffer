@@ -199,12 +199,48 @@
       }
 
       .controls {
+        margin-bottom: 16px;
+        animation: rise 800ms 80ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      .actions {
         display: flex;
         flex-wrap: wrap;
         gap: 12px;
         align-items: center;
-        margin-bottom: 16px;
-        animation: rise 800ms 80ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      .options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin-top: 12px;
+      }
+
+      .options-toggle {
+        display: none;
+        width: 100%;
+        margin-top: 12px;
+        border: 0;
+        font: inherit;
+        font-weight: 800;
+        padding: 14px 16px;
+        border-radius: 18px;
+        cursor: pointer;
+        color: var(--ink);
+        background: linear-gradient(145deg, #efe2d1, var(--clay));
+        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), 0 6px 0 #b79f84;
+        text-align: left;
+      }
+
+      .options-toggle .chev {
+        float: right;
+        transition: transform 180ms ease;
+      }
+
+      .controls:not(.options-collapsed) .options-toggle .chev {
+        transform: rotate(180deg);
       }
 
       .btn {
@@ -216,6 +252,7 @@
         cursor: pointer;
         color: #fff;
         transition: transform 140ms ease, filter 140ms ease;
+        min-height: 48px;
       }
 
       .btn:hover:not(:disabled) {
@@ -291,12 +328,6 @@
         animation: rise 850ms 120ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
       }
 
-      @media (max-width: 820px) {
-        .stats-row {
-          grid-template-columns: 1fr;
-        }
-      }
-
       .stat-card h3 {
         margin: 0 0 8px;
         font-family: "Fredoka", sans-serif;
@@ -309,6 +340,7 @@
         font-weight: 700;
         line-height: 1.55;
         font-variant-numeric: tabular-nums;
+        overflow-wrap: anywhere;
       }
 
       .fps-big {
@@ -333,12 +365,6 @@
         grid-template-columns: 1fr 1fr;
         gap: 16px;
         animation: rise 900ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-      }
-
-      @media (max-width: 820px) {
-        .grid {
-          grid-template-columns: 1fr;
-        }
       }
 
       .panel {
@@ -421,6 +447,179 @@
         font-weight: 800;
         color: var(--muted);
       }
+
+      .timing-card {
+        margin-bottom: 16px;
+      }
+
+      .timing-card p {
+        margin: 0;
+        font-weight: 700;
+        color: var(--muted);
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ---- Mobile / tablet ---- */
+      @media (max-width: 820px) {
+        .wrap {
+          width: min(1120px, calc(100% - 20px));
+          padding: 18px 0 48px;
+        }
+
+        .topbar {
+          margin-bottom: 18px;
+          gap: 10px;
+        }
+
+        .brand-chip {
+          font-size: 0.92rem;
+          padding: 8px 12px 8px 8px;
+          max-width: calc(100% - 120px);
+        }
+
+        .brand-dot {
+          width: 28px;
+          height: 28px;
+          border-radius: 12px;
+          flex-shrink: 0;
+        }
+
+        .lang-switch button {
+          padding: 10px 14px;
+          min-height: 44px;
+        }
+
+        .hero {
+          margin-bottom: 18px;
+        }
+
+        .hero h1 {
+          font-size: clamp(2rem, 10vw, 2.8rem);
+        }
+
+        .hero p {
+          font-size: 0.98rem;
+          padding: 0 4px;
+        }
+
+        .clay-card {
+          border-radius: 22px;
+          padding: 14px;
+          box-shadow: 7px 8px 0 #cbb79f, 0 12px 28px rgba(90, 70, 50, 0.1),
+            var(--clay-inset);
+        }
+
+        .actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        }
+
+        .actions .btn {
+          width: 100%;
+          padding: 14px 12px;
+          font-size: 0.95rem;
+        }
+
+        .options-toggle {
+          display: block;
+        }
+
+        .controls.options-collapsed .options {
+          display: none;
+        }
+
+        .controls:not(.options-collapsed) .options {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+          margin-top: 10px;
+        }
+
+        .field {
+          width: 100%;
+          justify-content: space-between;
+          min-height: 48px;
+          padding: 10px 12px;
+          font-size: 0.9rem;
+        }
+
+        .field input[type="number"] {
+          min-width: 0;
+          width: 7.5rem;
+          font-size: 16px; /* avoid iOS zoom on focus */
+        }
+
+        .field input[type="checkbox"] {
+          width: 22px;
+          height: 22px;
+        }
+
+        .stats-row {
+          grid-template-columns: 1fr;
+          gap: 10px;
+          margin-bottom: 12px;
+        }
+
+        .fps-big {
+          font-size: 1.7rem;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+
+        .panel {
+          min-height: 0;
+        }
+
+        .panel header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 4px;
+          padding-bottom: 10px;
+        }
+
+        .panel header span {
+          text-align: left;
+          font-size: 0.75rem;
+        }
+
+        .out {
+          max-height: 220px;
+          min-height: 160px;
+          font-size: 0.8rem;
+          border-radius: 18px;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .blob-a,
+        .blob-b {
+          opacity: 0.28;
+          width: 160px;
+          height: 160px;
+        }
+
+        .hint,
+        .footer {
+          font-size: 0.9rem;
+          padding: 0 4px;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .actions {
+          grid-template-columns: 1fr;
+        }
+
+        .out {
+          max-height: 180px;
+          min-height: 140px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -446,31 +645,62 @@
         </p>
       </header>
 
-      <section class="clay-card controls">
-        <button class="btn btn-mint" id="btnStart" type="button" data-i18n="start">
-          开始流式
-        </button>
-        <button class="btn btn-coral" id="btnAbort" type="button" disabled data-i18n="abort">
-          中止
-        </button>
-        <button class="btn btn-sky" id="btnFinish" type="button" disabled data-i18n="finish">
-          结束
-        </button>
-        <button class="btn btn-clay" id="btnClear" type="button" data-i18n="clear">清空</button>
+      <section class="clay-card controls options-collapsed" id="controls">
+        <div class="actions">
+          <button class="btn btn-mint" id="btnStart" type="button" data-i18n="start">
+            开始流式
+          </button>
+          <button class="btn btn-coral" id="btnAbort" type="button" disabled data-i18n="abort">
+            中止
+          </button>
+          <button class="btn btn-sky" id="btnFinish" type="button" disabled data-i18n="finish">
+            结束
+          </button>
+          <button class="btn btn-clay" id="btnClear" type="button" data-i18n="clear">清空</button>
+        </div>
 
-        <label class="field">
-          <span data-i18n="chars">总字数</span>
-          <input id="sizeInput" type="number" min="1000" max="200000" step="1000" value="30000" />
-        </label>
-        <label class="field">
-          <span data-i18n="speed">速度</span>
-          <input id="cpsInput" type="number" min="0" max="50000" step="1" value="50" />
-          <span data-i18n="cps">字/秒</span>
-        </label>
-        <label class="field">
-          <input id="rawDom" type="checkbox" />
-          <span data-i18n="rawToggle">同时裸推 DOM</span>
-        </label>
+        <button
+          type="button"
+          class="options-toggle"
+          id="optionsToggle"
+          aria-expanded="false"
+          aria-controls="optionsPanel"
+        >
+          <span data-i18n="moreOptions">更多选项</span>
+          <span class="chev" aria-hidden="true">▾</span>
+        </button>
+
+        <div class="options" id="optionsPanel">
+          <label class="field">
+            <span data-i18n="chars">总字数</span>
+            <input
+              id="sizeInput"
+              type="number"
+              inputmode="numeric"
+              min="1000"
+              max="200000"
+              step="1000"
+              value="30000"
+            />
+          </label>
+          <label class="field">
+            <span data-i18n="speed">速度</span>
+            <input
+              id="cpsInput"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              max="50000"
+              step="1"
+              value="50"
+            />
+            <span data-i18n="cps">字/秒</span>
+          </label>
+          <label class="field">
+            <input id="rawDom" type="checkbox" />
+            <span data-i18n="rawToggle">同时裸推 DOM</span>
+          </label>
+        </div>
       </section>
 
       <section class="stats-row">
@@ -487,10 +717,8 @@
         </article>
       </section>
 
-      <section class="clay-card" style="margin-bottom: 16px">
-        <p id="timing" style="margin: 0; font-weight: 700; color: var(--muted); line-height: 1.6">
-          …
-        </p>
+      <section class="clay-card timing-card">
+        <p id="timing">…</p>
       </section>
 
       <section class="grid">
@@ -538,6 +766,7 @@
           abort: "中止",
           finish: "结束",
           clear: "清空",
+          moreOptions: "更多选项",
           chars: "总字数",
           speed: "速度",
           cps: "字/秒",
@@ -567,6 +796,7 @@
           abort: "Abort",
           finish: "Finish",
           clear: "Clear",
+          moreOptions: "More options",
           chars: "Chars",
           speed: "Speed",
           cps: "chars/sec",
@@ -609,6 +839,8 @@
       const els = {
         langZh: document.getElementById("langZh"),
         langEn: document.getElementById("langEn"),
+        controls: document.getElementById("controls"),
+        optionsToggle: document.getElementById("optionsToggle"),
         btnStart: document.getElementById("btnStart"),
         btnAbort: document.getElementById("btnAbort"),
         btnFinish: document.getElementById("btnFinish"),
@@ -902,6 +1134,11 @@
         }
         timerId = setTimeout(scheduleTick, charsPerSec <= 0 ? 0 : 16);
       }
+
+      els.optionsToggle.addEventListener("click", () => {
+        const collapsed = els.controls.classList.toggle("options-collapsed");
+        els.optionsToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      });
 
       els.langZh.addEventListener("click", () => {
         lang = "zh";
