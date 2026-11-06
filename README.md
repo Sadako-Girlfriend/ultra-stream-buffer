@@ -165,6 +165,7 @@ interface UltraStreamBufferOptions {
 class UltraStreamBuffer {
   push(chunk: string): void;
   finish(): void;
+  flushNow(): void;               // sync flush; stream stays open
   abort(): void;
   readonly isAborted: boolean;
   readonly isFinished: boolean;   // true only after finish()

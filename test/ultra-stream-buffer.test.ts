@@ -340,4 +340,46 @@ describe('UltraStreamBuffer', () => {
     await delay(60);
     assert.equal(buf.hasPendingFrame, false);
   });
+
+  it('flushNow() sync-flushes without ending the stream', async () => {
+    const updates: string[] = [];
+    let finished = false;
+    const buf = new UltraStreamBuffer({
+      throttleTime: 1000,
+      maxBufferChars: 10_000,
+      maxSpanMs: 10_000,
+      onUpdate: (text) => {
+        updates.push(text);
+      },
+      onFinish: () => {
+        finished = true;
+      },
+    });
+
+    buf.push('Hi');
+    assert.equal(buf.hasPendingFrame, true);
+
+    buf.flushNow();
+
+    assert.equal(updates.length, 1);
+    assert.equal(updates[0], 'Hi');
+    assert.equal(buf.pendingChars, 0);
+    assert.equal(buf.hasPendingFrame, false);
+    assert.equal(buf.isFinished, false);
+    assert.equal(buf.isDone, false);
+    assert.equal(finished, false);
+
+    // stream still open
+    buf.push('!');
+    buf.flushNow();
+    assert.equal(updates.length, 2);
+    assert.equal(updates[1], '!');
+
+    // after finish, flushNow is a no-op
+    buf.finish();
+    assert.equal(finished, true);
+    buf.push('nope');
+    buf.flushNow();
+    assert.equal(updates.length, 2);
+  });
 });

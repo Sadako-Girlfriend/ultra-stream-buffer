@@ -306,6 +306,23 @@ export class UltraStreamBuffer {
   }
 
   /**
+   * EN: Synchronously cancel any pending frame and flush now.
+   *     Useful before route changes / unmount — does NOT end the stream
+   *     (further push() still works until finish/abort).
+   * 中文：立刻取消待定帧并同步冲刷。
+   *      适合路由切换 / 组件卸载前对齐 DOM —— 不会结束流
+   *      （在 finish/abort 之前仍可继续 push）。
+   */
+  flushNow(): void {
+    if (this.aborted || this.finished) {
+      return;
+    }
+
+    this.cancelFrame();
+    this.flush();
+  }
+
+  /**
    * EN: Cancel scheduler, clear buffer, silence callbacks. Idempotent.
    * 中文：取消调度、清空缓冲、静默回调。幂等。
    */
